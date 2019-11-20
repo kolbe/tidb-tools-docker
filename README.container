@@ -1,0 +1,7 @@
+This container includes several tools that are useful when interacting with a TiDB cluster.
+
+Please consult https://pingcap.com/docs for TiDB documentation.
+
+Questions? Join us in TiDB Community Slack at https://pingcap.com/tidbslack
+
+All the tools included in this image are located in /usr/local/bin/
