@@ -1,18 +1,3 @@
-FROM rust AS tikv
-WORKDIR /
-RUN apt-get update && apt-get install -y cmake git
-RUN git clone https://github.com/pingcap/tikv
-WORKDIR /tikv
-RUN make ctl
-
-#FROM ubuntu:18.04 AS tidb
-
-FROM golang AS pd
-WORKDIR /
-RUN git clone https://github.com/pingcap/pd && \
-    make -C /pd pd-ctl
-
-
 FROM ubuntu:18.04 AS mysql-client
 RUN sed -i 's/# \(deb-src .*\)$/\1/' /etc/apt/sources.list && \
     apt-get update && \
@@ -28,6 +13,12 @@ RUN    make -j install
 
 
 FROM pingcap/tidb-enterprise-tools AS tidb-enterprise-tools
+RUN apk add binutils curl \
+    && curl -sS -L http://download.pingcap.org/tidb-v3.0-linux-amd64.tar.gz | \
+         tar -C / --strip-components=2 -xvzf - \
+             tidb-v3.0-linux-amd64/bin/tikv-ctl \
+             tidb-v3.0-linux-amd64/bin/pd-ctl \
+    && strip importer loader mydumper syncer tikv-ctl pd-ctl
 
 
 FROM ubuntu:18.04
@@ -37,10 +28,9 @@ RUN apt-get update && apt-get install -y \
     libreadline5 \
     vim \
     && rm -rf /var/lib/apt/lists/*
-COPY --from=tikv /tikv/bin/tikv-ctl /usr/local/bin/
-COPY --from=pd /pd/bin/pd-ctl /usr/local/bin/
+
 COPY --from=mysql-client /usr/local/mysql/bin/mysql /usr/local/bin/
-COPY --from=tidb-enterprise-tools /importer /loader /mydumper /syncer /usr/local/bin/
+COPY --from=tidb-enterprise-tools /importer /loader /mydumper /syncer /tikv-ctl /pd-ctl /usr/local/bin/
 WORKDIR /root
 COPY README.container README
 COPY motd.bash .motd.bash
