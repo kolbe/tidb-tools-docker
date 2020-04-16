@@ -25,6 +25,7 @@ FROM stedolan/jq as jq
 FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y \
     curl \
+    dnsutils \
     less \
     libreadline5 \
     vim \
